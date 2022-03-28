@@ -1,0 +1,257 @@
+clear screen;
+drop TABLE operations1;
+CREATE TABLE operations1(opnum number, operationtype varchar2(20), iptype varchar2(20), optype varchar2(20) );
+SELECT * from operations1;
+
+INSERT into operations1 values(1,'conversion','octal','binary');
+INSERT into operations1 values(2,'conversion','decimal','binary');
+INSERT into operations1 values(3,'conversion','hexa','binary');
+
+INSERT into operations1 values(4,'conversion','binary','octal');
+INSERT into operations1 values(5,'conversion','decimal','octal');
+INSERT into operations1 values(6,'conversion','hexa','octal');
+
+INSERT into operations1 values(7,'conversion','binary','decimal');
+INSERT into operations1 values(8,'conversion','octal','decimal');
+INSERT into operations1 values(9,'conversion','hexa','decimal');
+
+INSERT into operations1 values(10,'conversion','binary','hexa');
+INSERT into operations1 values(11,'conversion','octal','hexa');
+INSERT into operations1 values(12,'conversion','decimal','hexa');
+
+SELECT * from operations1;
+
+drop TABLE records1;
+CREATE TABLE records1(recnum number, recdate date, rectype varchar2(20), reciptype varchar2(20), recoptype varchar2(20), recipvalue varchar(20), recopvalue varchar(20) );
+SELECT * from records1;
+
+commit;
+
+SET VERIFY OFF;
+SET SERVEROUTPUT ON;
+
+DECLARE
+  A operations1.opnum%TYPE;
+  B operations1.operationtype%TYPE;
+  C operations1.iptype%TYPE;
+  D operations1.optype%TYPE;
+  
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('Operation list :');
+	DBMS_OUTPUT.PUT_LINE('Sl No.' || '     ' || 'Operation Type' || '     ' || 'Input type' || '     ' || 'Output type');
+	FOR R IN (SELECT * FROM operations1) LOOP
+		A := R.opnum;
+        B := R.operationtype;
+        C := R.iptype;
+        D := R.optype;
+		DBMS_OUTPUT.PUT_LINE(A || '           ' || B || '           ' || C || '           ' || D);
+	END LOOP;
+END;
+/
+
+SET VERIFY OFF;
+SET SERVEROUTPUT ON;
+CREATE OR REPLACE PACKAGE mypack AS
+
+	FUNCTION DecimalToBinary(A1 IN NUMBER)
+	RETURN NUMBER;
+	FUNCTION DecimalToOctal(B1 IN NUMBER)
+	RETURN NUMBER;
+	FUNCTION DecimalToHexa(C1 IN NUMBER)
+	RETURN NUMBER;
+	FUNCTION BinaryToDecimal(binval in char)
+	RETURN NUMBER;
+	FUNCTION OctalToDecimal(binval in char)
+	RETURN NUMBER;
+	FUNCTION HexaToDecimal(binval in char)
+	RETURN NUMBER;
+	
+	PROCEDURE PerformOperations(P IN NUMBER,Y IN varchar);
+	
+END mypack;
+/
+
+CREATE OR REPLACE PACKAGE BODY mypack AS
+
+	FUNCTION DecimalToBinary(A1 IN NUMBER)
+	RETURN NUMBER
+	IS
+	ln_unit NUMBER;
+    ln_input NUMBER;
+    i NUMBER  := 0;
+    ln_out NUMBER  := 0;
+	BEGIN
+		ln_input := A1; 
+        WHILE ln_input > 0 LOOP
+		    ln_unit := MOD( ln_input, 2 );      
+            ln_input := TRUNC(ln_input/2);     
+            ln_out := TO_NUMBER(ln_unit * power(10,i) + ln_out);       
+            i:= i+1;
+        END LOOP;
+        RETURN(ln_out);		
+	END DecimalToBinary;
+	
+	
+	FUNCTION DecimalToOctal(B1 IN NUMBER)
+	RETURN NUMBER
+	IS 
+	ln_unit NUMBER;
+    ln_input NUMBER;
+    i NUMBER  := 0;
+    ln_out NUMBER  := 0;
+	BEGIN
+		ln_input := B1; 
+        WHILE ln_input > 0 LOOP
+		    ln_unit := MOD( ln_input, 8 );      
+            ln_input := TRUNC(ln_input/8);     
+            ln_out := TO_NUMBER(ln_unit * power(10,i) + ln_out);       
+            i:= i+1;
+        END LOOP;
+        RETURN(ln_out);
+	END DecimalToOctal;
+	
+	
+	FUNCTION DecimalToHexa(C1 IN NUMBER)
+	RETURN NUMBER
+	IS 
+	ln_unit NUMBER;
+    ln_input NUMBER;
+    i NUMBER  := 0;
+    ln_out NUMBER  := 0;
+	BEGIN
+		ln_input := C1; 
+        WHILE ln_input > 0 LOOP
+		    ln_unit := MOD( ln_input, 16 );      
+            ln_input := TRUNC(ln_input/16);     
+            ln_out := TO_NUMBER(ln_unit * power(10,i) + ln_out);       
+            i:= i+1;
+        END LOOP;
+        RETURN(ln_out);
+	END DecimalToHexa;
+
+
+FUNCTION BinaryToDecimal(binval in char) RETURN number IS
+  i                 number;
+  digits            number;
+  result            number := 0;
+  current_digit     char(1);
+  current_digit_dec number;
+BEGIN
+  digits := length(binval);
+  for i in 1..digits loop
+     current_digit := SUBSTR(binval, i, 1);
+     current_digit_dec := to_number(current_digit);
+     result := (result * 2) + current_digit_dec;
+  end loop;
+  return result;
+END BinaryToDecimal;
+
+FUNCTION OctalToDecimal(binval in char) RETURN number IS
+  i                 number;
+  digits            number;
+  result            number := 0;
+  current_digit     char(1);
+  current_digit_dec number;
+BEGIN
+  digits := length(binval);
+  for i in 1..digits loop
+     current_digit := SUBSTR(binval, i, 1);
+     current_digit_dec := to_number(current_digit);
+     result := (result * 8) + current_digit_dec;
+  end loop;
+  return result;
+END OctalToDecimal;
+
+FUNCTION HexaToDecimal(binval in char) RETURN number IS
+  i                 number;
+  digits            number;
+  result            number := 0;
+  current_digit     char(1);
+  current_digit_dec number;
+BEGIN
+  digits := length(binval);
+  for i in 1..digits loop
+     current_digit := SUBSTR(binval, i, 1);
+     current_digit_dec := to_number(current_digit);
+     result := (result * 16) + current_digit_dec;
+  end loop;
+  return result;
+END HexaToDecimal;
+
+    PROCEDURE PerformOperations(P IN NUMBER,Y IN varchar)
+	IS
+	N NUMBER;
+	temp NUMBER;
+	res NUMBER;
+	BEGIN
+	    N := TO_NUMBER(Y);
+		IF P = 1 THEN
+		    temp := mypack.OctalToDecimal(Y);
+			res := mypack.DecimalToBinary(temp);
+	        DBMS_OUTPUT.PUT_LINE(res);
+		ELSIF P = 2 THEN
+			res := mypack.DecimalToBinary(N);
+	        DBMS_OUTPUT.PUT_LINE(res);
+		ELSIF P = 3 THEN
+			temp := mypack.HexaToDecimal(Y);
+			res := mypack.DecimalToBinary(temp);
+	        DBMS_OUTPUT.PUT_LINE(res);
+		ELSIF P = 4 THEN
+			temp := mypack.BinaryToDecimal(Y);
+			res := mypack.DecimalToOctal(temp);
+	        DBMS_OUTPUT.PUT_LINE(res);
+		ELSIF P = 5 THEN
+			res := mypack.DecimalToOctal(N);
+	        DBMS_OUTPUT.PUT_LINE(res);
+		ELSIF P = 6 THEN
+			temp := mypack.HexaToDecimal(Y);
+			res := mypack.DecimalToOctal(temp);
+	        DBMS_OUTPUT.PUT_LINE(res);
+		ELSIF P = 7 THEN
+			res := mypack.BinaryToDecimal(Y);
+	        DBMS_OUTPUT.PUT_LINE(res);
+		ELSIF P = 8 THEN
+			res := mypack.OctalToDecimal(Y);
+	        DBMS_OUTPUT.PUT_LINE(res);
+		ELSIF P = 9 THEN
+			res := mypack.HexaToDecimal(Y);
+	        DBMS_OUTPUT.PUT_LINE(res);
+		ELSIF P = 10 THEN
+			temp := mypack.BinaryToDecimal(Y);
+			res := mypack.DecimalToHexa(temp);
+	        DBMS_OUTPUT.PUT_LINE(res);
+		ELSIF P = 11 THEN
+			temp := mypack.OctalToDecimal(Y);
+			res := mypack.DecimalToHexa(temp);
+	        DBMS_OUTPUT.PUT_LINE(res);
+		ELSIF P = 12 THEN
+			res := mypack.DecimalToHexa(N);
+	        DBMS_OUTPUT.PUT_LINE(res);
+		END IF;
+	END PerformOperations;
+
+END mypack;
+/
+
+SET SERVEROUTPUT ON;
+SET VERIFY OFF;
+DECLARE
+    test number;
+	test2 number;
+    X operations1.opnum%TYPE := '&choose_operation_number';  
+	Y varchar(20) := '&input_number';  
+	negative EXCEPTION;
+BEGIN
+	IF X < 0 OR X > 12 THEN
+		RAISE negative;
+	ELSE
+	    mypack.PerformOperations(X,Y);
+	END IF;
+EXCEPTION
+	WHEN negative THEN
+		DBMS_OUTPUT.PUT_LINE('Ivalid number');
+END;
+/
+
+
+

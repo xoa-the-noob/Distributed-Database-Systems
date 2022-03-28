@@ -1,0 +1,40 @@
+SET VERIFY OFF;
+SET SERVEROUTPUT ON;
+
+DECLARE
+     num int := '&enter_number';
+   
+
+
+BEGIN
+WHILE TRUE
+    LOOP
+    @"C:\Users\EDC-SEIP\Desktop\4.1 lab\DDB lab\lab2\table.sql"
+        IF num = 2 THEN
+            FOR i IN (select id, name, taka from money) LOOP
+	            IF MOD(i.id, 2) != 0 THEN
+			        insert into newmoney values(i.id, i.name, i.taka);
+			        delete from money where id = i.id;
+		        END IF;
+	        END LOOP;
+	
+	    ELSIf num = 1 THEN
+		    FOR i IN (select id, name, taka from money) LOOP
+	            IF MOD(i.id, 2) = 0 THEN
+			        insert into newmoney values(i.id, i.name, i.taka);
+			        delete from money where id = i.id;
+		        END IF;
+	        END LOOP;
+	    ELSE
+	        EXIT;
+	    END IF;
+    END LOOP;	     
+END;
+/
+
+
+
+select * from money;
+select * from newmoney;
+
+

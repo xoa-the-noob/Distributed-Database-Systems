@@ -1,0 +1,32 @@
+a. SHOW ERRORS
+
+b. TOO_MANY_ROWS
+
+c. DUP_VAL_ON_INDEX
+
+d. The function must return a value but a Procedure cannot directly return any value. It needs to use OUT or IN-OUT variables.
+
+e. Row Level Trigger : Row level triggers executes once for each and every row in the transaction. That is number of execution is equal to numner of rows.  
+Statement level trigger: Statement level triggers executes only once for each single transaction.
+
+f. Simplest unit in PL/SQL is anonymous block.
+
+g.Yes , we can use Array in PL/SQL. For example: names and marks are the two arrays:
+
+DECLARE 
+   type namesarray IS VARRAY(5) OF VARCHAR2(10); 
+   type grades IS VARRAY(5) OF INTEGER; 
+   names namesarray; 
+   marks grades; 
+   total integer; 
+BEGIN 
+   names := namesarray('Kavita', 'Pritam', 'Ayan', 'Rishav', 'Aziz'); 
+   marks:= grades(98, 97, 78, 87, 92); 
+   total := names.count; 
+   dbms_output.put_line('Total '|| total || ' Students'); 
+   FOR i in 1 .. total LOOP 
+      dbms_output.put_line('Student: ' || names(i) || ' 
+      Marks: ' || marks(i)); 
+   END LOOP; 
+END; 
+/
